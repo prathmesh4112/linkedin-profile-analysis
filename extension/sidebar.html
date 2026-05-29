@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>ProfileLens AI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;background:#0f1117;color:#e2e8f0;min-height:100vh}
+
+.header{display:flex;align-items:center;gap:8px;padding:13px 16px;background:#0f1117;border-bottom:1px solid #1e2433;position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:7px}
+.logo-icon{width:26px;height:26px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.logo-text{font-size:14px;font-weight:700;color:#f1f5f9;letter-spacing:-.3px}
+.logo-sub{font-size:10px;color:#64748b}
+.pill{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;background:#1e2433;color:#64748b;border:1px solid #2d3748;letter-spacing:.04em}
+.pill.live{background:#052e16;color:#4ade80;border-color:#166534}
+.pill.loading{background:#1e3a8a;color:#93c5fd;border-color:#1d4ed8}
+.pill.error{background:#450a0a;color:#f87171;border-color:#991b1b}
+
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;gap:12px}
+.state-icon{width:52px;height:52px;background:#1e2433;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:4px}
+.state h3{font-size:14px;font-weight:600;color:#cbd5e1}
+.state p{font-size:12px;color:#475569;line-height:1.6}
+.spinner{width:36px;height:36px;border:3px solid #1e2433;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-card{margin:16px;background:#1a0808;border:1px solid #7f1d1d;border-radius:10px;padding:14px;font-size:12px;color:#fca5a5;line-height:1.6}
+.err-card strong{color:#f87171;display:block;margin-bottom:4px;font-size:13px}
+
+.content{padding:14px 14px 80px}
+.profile-card{background:#161b27;border:1px solid #1e2d45;border-radius:12px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.pinfo{flex:1;min-width:0}
+.pname{font-size:14px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phead{font-size:11px;color:#64748b;margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+.scores-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sc{background:#161b27;border:1px solid #1e2d45;border-radius:12px;padding:12px;position:relative;overflow:hidden;cursor:default;transition:border-color .2s}
+.sc:hover{border-color:#2a3a5c}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0}
+.sc.blue::before{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.sc.green::before{background:linear-gradient(90deg,#10b981,#34d399)}
+.sc.purple::before{background:linear-gradient(90deg,#8b5cf6,#a78bfa)}
+.sc.amber::before{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.sc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#475569;margin-bottom:6px}
+.sc-val{font-size:28px;font-weight:800;color:#f1f5f9;line-height:1;letter-spacing:-1px}
+.sc-val span{font-size:13px;font-weight:400;color:#475569;letter-spacing:0}
+.sc-bar{height:3px;background:#1e2433;border-radius:3px;margin-top:8px;overflow:hidden}
+.sc-fill{height:100%;border-radius:3px;width:0%;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.sc.blue .sc-fill{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.sc.green .sc-fill{background:linear-gradient(90deg,#10b981,#34d399)}
+.sc.purple .sc-fill{background:linear-gradient(90deg,#8b5cf6,#a78bfa)}
+.sc.amber .sc-fill{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.tier-badge{display:none;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:6px;letter-spacing:.03em}
+
+.sec-hdr{display:flex;align-items:center;gap:7px;margin:16px 0 8px}
+.sec-bar{width:4px;height:14px;border-radius:2px;flex-shrink:0}
+.sec-bar.blue{background:linear-gradient(180deg,#3b82f6,#8b5cf6)}
+.sec-bar.green{background:linear-gradient(180deg,#10b981,#34d399)}
+.sec-bar.amber{background:linear-gradient(180deg,#f59e0b,#fbbf24)}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b}
+
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.tag{font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid}
+.tag-have{background:#052e16;color:#4ade80;border-color:#166534}
+.tag-missing{background:#450a0a;color:#f87171;border-color:#991b1b}
+.tag-growing{background:#431407;color:#fb923c;border-color:#9a3412}
+
+.iitem{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;background:#161b27;border:1px solid #1e2d45;border-radius:9px;margin-bottom:6px;font-size:12px;color:#94a3b8;line-height:1.55}
+.icheck{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700;background:#052e16;color:#4ade80}
+.inum{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;font-weight:700;background:#1e3a5f;color:#60a5fa}
+
+.sug{background:#161b27;border:1px solid #1e2d45;border-radius:10px;padding:11px 13px;margin-bottom:7px;border-left:3px solid #1e2d45}
+.sug.high{border-left-color:#ef4444}
+.sug.medium{border-left-color:#f59e0b}
+.sug.low{border-left-color:#3b82f6}
+.sug-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.sug-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b}
+.sug-pri{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}
+.sug-pri.high{background:#450a0a;color:#f87171}
+.sug-pri.medium{background:#431407;color:#fbbf24}
+.sug-pri.low{background:#0c1a3a;color:#60a5fa}
+.sug-issue{font-size:12px;font-weight:600;color:#cbd5e1;margin-bottom:4px}
+.sug-fix{font-size:11px;color:#64748b;line-height:1.55}
+
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 14px;background:#0f1117;border-top:1px solid #1e2433}
+.analyze-btn{width:100%;padding:10px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.analyze-btn:hover{opacity:.88}
+.analyze-btn:disabled{background:#1e2433;color:#475569;cursor:not-allowed;opacity:1}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">P</div>
+    <div>
+      <div class="logo-text">ProfileLens</div>
+      <div class="logo-sub">AI Profile Analyzer</div>
+    </div>
+  </div>
+  <span class="pill" id="status-pill">Waiting</span>
+</div>
+
+<div id="s-wait" class="state">
+  <div class="state-icon">&#128269;</div>
+  <h3>No profile loaded</h3>
+  <p>Navigate to any LinkedIn profile<br>to start analysis</p>
+</div>
+
+<div id="s-load" class="state" style="display:none">
+  <div class="spinner"></div>
+  <p>Analyzing profile with ML models...</p>
+</div>
+
+<div id="s-err" style="display:none">
+  <div class="err-card">
+    <strong>Analysis failed</strong>
+    <span id="err-msg"></span>
+  </div>
+</div>
+
+<div id="s-result" style="display:none">
+  <div class="content">
+    <div class="profile-card">
+      <div class="avatar" id="r-avatar">?</div>
+      <div class="pinfo">
+        <div class="pname" id="r-name">—</div>
+        <div class="phead" id="r-head">—</div>
+      </div>
+    </div>
+
+    <div class="scores-grid">
+      <div class="sc blue">
+        <div class="sc-label">Career</div>
+        <div class="sc-val"><span id="v-career">—</span><span>/100</span></div>
+        <div class="sc-bar"><div class="sc-fill" id="b-career"></div></div>
+        <span class="tier-badge" id="t-career"></span>
+      </div>
+      <div class="sc green">
+        <div class="sc-label">Authenticity</div>
+        <div class="sc-val"><span id="v-auth">—</span><span>/100</span></div>
+        <div class="sc-bar"><div class="sc-fill" id="b-auth"></div></div>
+        <span class="tier-badge" id="t-auth"></span>
+      </div>
+      <div class="sc purple">
+        <div class="sc-label">Hire / Fit</div>
+        <div class="sc-val"><span id="v-hire">—</span><span>/100</span></div>
+        <div class="sc-bar"><div class="sc-fill" id="b-hire"></div></div>
+        <span class="tier-badge" id="t-hire"></span>
+      </div>
+      <div class="sc amber">
+        <div class="sc-label">Profile Health</div>
+        <div class="sc-val"><span id="v-health">—</span><span>/100</span></div>
+        <div class="sc-bar"><div class="sc-fill" id="b-health"></div></div>
+        <span class="tier-badge" id="t-health"></span>
+      </div>
+    </div>
+
+    <div class="sec-hdr"><div class="sec-bar blue"></div><div class="sec-title">Skills</div></div>
+    <div class="tags" id="tags-have"></div>
+    <div class="tags" id="tags-miss"></div>
+
+    <div class="sec-hdr"><div class="sec-bar green"></div><div class="sec-title">Strengths</div></div>
+    <div id="strengths-list"></div>
+
+    <div class="sec-hdr"><div class="sec-bar blue"></div><div class="sec-title">Insights</div></div>
+    <div id="insights-list"></div>
+
+    <div class="sec-hdr"><div class="sec-bar amber"></div><div class="sec-title">Profile suggestions</div></div>
+    <div id="sug-list"></div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="analyze-btn" id="analyze-btn" disabled>Analyze Profile</button>
+</div>
+
+<script src="sidebar.js"></script>
+</body>
+</html>
